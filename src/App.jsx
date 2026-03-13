@@ -304,11 +304,37 @@ export default function App() {
     }, 380);
   }
 
+  async function fetchSubmissions() {
+    try {
+      const res = await fetch(
+        `https://api.airtable.com/v0/${import.meta.env.VITE_AIRTABLE_BASE_ID}/${import.meta.env.VITE_AIRTABLE_TABLE_ID}?sort[0][field]=Score&sort[0][direction]=desc`,
+        {
+          headers: {
+            Authorization: `Bearer ${import.meta.env.VITE_AIRTABLE_API_KEY}`,
+          },
+        }
+      );
+      const data = await res.json();
+      const records = data.records.map((r) => ({
+        name: r.fields.Name,
+        email: r.fields.Email,
+        pct: r.fields.Score,
+        tier: r.fields.Tier,
+        time: r.fields.Time,
+        score: Math.round((r.fields.Score / 100) * MAX_SCORE),
+      }));
+      setSubmissions(records);
+    } catch (e) {
+      console.error("Failed to fetch submissions:", e);
+    }
+  }
+
   function handleAdminKey(e) {
     if (e.key === "Enter") {
       if (adminInput === ADMIN_PASSWORD) {
         setAdminError(false);
         setAdminOpen(true);
+        fetchSubmissions();
       } else {
         setAdminError(true);
       }
