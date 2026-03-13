@@ -315,6 +315,8 @@ export default function App() {
         }
       );
       const data = await res.json();
+      console.log("Airtable response:", JSON.stringify(data));
+      if (!data.records) return;
       const records = data.records.map((r) => ({
         name: r.fields.Name,
         email: r.fields.Email,
