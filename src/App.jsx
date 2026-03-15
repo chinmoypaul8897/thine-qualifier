@@ -576,7 +576,7 @@ export default function App() {
 </div>
   ) : (
     <div style={{ maxWidth: "700px", margin: "0 auto", textAlign: "left" }}>
-  <p style={{ fontSize: "10px", letterSpacing: "3px", textTransform: "uppercase", color: "#333", marginBottom: "24px" }}>
+  <p style={{ fontSize: "10px", letterSpacing: "3px", textTransform: "uppercase", color: "#666", marginBottom: "24px" }}>
     Submissions · {submissions.length} total
   </p>
   {adminLoading ? (
@@ -599,7 +599,9 @@ export default function App() {
             <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "16px" }}>
               <p style={{ fontSize: "11px", letterSpacing: "2px", textTransform: "uppercase", color: "#E87B4A" }}>{date}</p>
               <div style={{ flex: 1, height: "1px", background: "#1a1a1a" }} />
-              <p style={{ fontSize: "11px", color: "#333" }}>{daySubmissions.length} submissions</p>
+              <p style={{ fontSize: "11px", color: "#f0ede6" }}>
+  {daySubmissions.length} {date === new Date().toLocaleDateString('en-IN') ? "today" : "submissions"}
+</p>
             </div>
             {daySubmissions.map((s, i) => {
   const t = getTier(s.score);
