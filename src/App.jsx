@@ -116,7 +116,6 @@ const styles = {
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
-    borderBottom: "1px solid #1a1a1a",
   },
   logo: {
   fontFamily: "'Cormorant Garamond', serif",
@@ -138,7 +137,7 @@ const styles = {
     flexDirection: "column",
     alignItems: "center",
     justifyContent: "center",
-    padding: "56px 24px",
+    
   },
   inner: { maxWidth: "560px", width: "100%" },
   eyebrow: {
@@ -161,7 +160,7 @@ const styles = {
     fontSize: "15px",
     color: "#888",
     lineHeight: 1.7,
-    marginBottom: "40px",
+    marginBottom: "24px",
   },
   label: {
     display: "block",
@@ -234,20 +233,24 @@ const styles = {
   footer: {
     padding: "18px 36px",
     textAlign: "center",
-    borderTop: "1px solid #111",
+    borderTop: "none",
   },
 };
 
 export default function App() {
+  const [adminLoading, setAdminLoading] = useState(false);
+  const [copiedId, setCopiedId] = useState(null);
   const [screen, setScreen] = useState("intro");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [step, setStep] = useState(0);
   const [score, setScore] = useState(0);
   const [selected, setSelected] = useState(null);
+  const [answers, setAnswers] = useState([]);
   const [adminInput, setAdminInput] = useState("");
   const [adminError, setAdminError] = useState(false);
   const [adminOpen, setAdminOpen] = useState(false);
+  const [expandedRows, setExpandedRows] = useState({});
   const [submissions, setSubmissions] = useState([]);
 
   const pct = Math.round((score / MAX_SCORE) * 100);
@@ -269,6 +272,14 @@ export default function App() {
               Score: submissionData.pct,
               Tier: submissionData.tier,
               Time: submissionData.time,
+              Role: submissionData.answers[0],
+              "Daily Conversations": submissionData.answers[1],
+              "Signal Loss": submissionData.answers[2],
+              "Current Challenge": submissionData.answers[3],
+              "Capture System": submissionData.answers[4],
+              "Decision Making": submissionData.answers[5],
+              Commitment: submissionData.answers[6],
+              Contacted: false,
             }
           }]
         }),
@@ -285,29 +296,34 @@ export default function App() {
       const newScore = score + opt.s;
       if (step < QUESTIONS.length - 1) {
         setScore(newScore);
+        setAnswers([...answers, opt.l]);
         setStep(step + 1);
         setSelected(null);
       } else {
-        const submission = {
-          name,
-          email,
-          score: newScore,
-          pct: Math.round((newScore / MAX_SCORE) * 100),
-          tier: getTier(newScore).label,
-          time: new Date().toLocaleTimeString(),
-        };
-        setScore(newScore);
-        setSubmissions((prev) => [...prev, submission]);
-        saveToAirtable(submission);
-        setScreen("result");
+        const newAnswers = [...answers, opt.l];
+      const submission = {
+        name,
+        email,
+        score: newScore,
+        pct: Math.round((newScore / MAX_SCORE) * 100),
+        tier: getTier(newScore).label,
+        time: new Date().toLocaleString(),
+        answers: newAnswers,
+      };
+      setScore(newScore);
+      setAnswers(newAnswers);
+      setSubmissions((prev) => [...prev, submission]);
+      saveToAirtable(submission);
+      setScreen("result");
       }
     }, 380);
   }
 
   async function fetchSubmissions() {
+    setAdminLoading(true);
     try {
       const res = await fetch(
-        `https://api.airtable.com/v0/${import.meta.env.VITE_AIRTABLE_BASE_ID}/${import.meta.env.VITE_AIRTABLE_TABLE_ID}?sort[0][field]=Score&sort[0][direction]=desc`,
+        `https://api.airtable.com/v0/${import.meta.env.VITE_AIRTABLE_BASE_ID}/${import.meta.env.VITE_AIRTABLE_TABLE_ID}`,
         {
           headers: {
             Authorization: `Bearer ${import.meta.env.VITE_AIRTABLE_API_KEY}`,
@@ -315,20 +331,61 @@ export default function App() {
         }
       );
       const data = await res.json();
-      console.log("Airtable response:", JSON.stringify(data));
       if (!data.records) return;
       const records = data.records.map((r) => ({
+        id: r.id,
         name: r.fields.Name,
         email: r.fields.Email,
         pct: r.fields.Score,
         tier: r.fields.Tier,
         time: r.fields.Time,
         score: Math.round((r.fields.Score / 100) * MAX_SCORE),
+        contacted: r.fields.Contacted || false,
+        answers: {
+          Role: r.fields.Role || "-",
+          "Daily Conversations": r.fields["Daily Conversations"] || "-",
+          "Signal Loss": r.fields["Signal Loss"] || "-",
+          "Current Challenge": r.fields["Current Challenge"] || "-",
+          "Capture System": r.fields["Capture System"] || "-",
+          "Decision Making": r.fields["Decision Making"] || "-",
+          Commitment: r.fields.Commitment || "-",
+        },
       }));
       setSubmissions(records);
     } catch (e) {
       console.error("Failed to fetch submissions:", e);
+    } finally {
+      setAdminLoading(false);
     }
+  }
+  async function updateContacted(recordId, currentStatus) {
+    setSubmissions((prev) =>
+      prev.map((s) =>
+        s.id === recordId ? { ...s, contacted: !currentStatus } : s
+      )
+    );
+    try {
+      await fetch(
+        `https://api.airtable.com/v0/${import.meta.env.VITE_AIRTABLE_BASE_ID}/${import.meta.env.VITE_AIRTABLE_TABLE_ID}/${recordId}`,
+        {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${import.meta.env.VITE_AIRTABLE_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            fields: {
+              Contacted: !currentStatus,
+            },
+          }),
+        }
+      );
+    } catch (e) {
+      console.error("Failed to update contacted status:", e);
+    }
+  }
+  function toggleExpanded(id) {
+    setExpandedRows(prev => ({ ...prev, [id]: !prev[id] }));
   }
 
   function handleAdminKey(e) {
@@ -350,6 +407,7 @@ export default function App() {
     setStep(0);
     setScore(0);
     setSelected(null);
+    setAnswers([]);
     setAdminInput("");
     setAdminOpen(false);
     setAdminError(false);
@@ -379,7 +437,7 @@ export default function App() {
       )}
 
       {/* BODY */}
-      <div style={styles.body}>
+      <div style={{...styles.body, padding: screen === "question" ? "56px 24px" : screen === "result" ? "32px 24px" : "0px 24px"}}>
         <div style={styles.inner}>
 
           {/* INTRO */}
@@ -476,7 +534,7 @@ export default function App() {
       </div>
 
       {/* FOOTER — ADMIN */}
-      <div style={{ padding: "24px 36px", textAlign: "center", borderTop: "1px solid #111" }}>
+      <div style={{ padding: "24px 36px", textAlign: "center", borderTop: "none" }}>
   {!adminOpen ? (
     <div style={{ display: "inline-flex", alignItems: "center", gap: "10px", background: "#111", border: "1px solid #1e1e1e", borderRadius: "100px", padding: "8px 18px" }}>
       <span style={{ fontSize: "10px", letterSpacing: "2px", textTransform: "uppercase", color: "#333" }}>Admin</span>
@@ -491,31 +549,121 @@ export default function App() {
       {adminError && <span style={{ fontSize: "11px", color: "#E87B4A" }}>incorrect</span>}
     </div>
   ) : (
-    <div style={{ maxWidth: "660px", margin: "0 auto", textAlign: "left" }}>
-      <p style={{ fontSize: "10px", letterSpacing: "3px", textTransform: "uppercase", color: "#333", marginBottom: "20px" }}>
-        Submissions · {submissions.length} total
-      </p>
-      {submissions.length === 0 ? (
-        <p style={{ fontSize: "13px", color: "#333" }}>No submissions yet.</p>
-      ) : (
-        [...submissions].sort((a, b) => b.score - a.score).map((s, i) => {
-          const t = getTier(s.score);
-          return (
-            <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "13px 0", borderBottom: "1px solid #111", fontSize: "13px" }}>
-              <div>
-                <span style={{ color: "#c8c4bc" }}>{s.name}</span>
-                <span style={{ color: "#333", marginLeft: "12px", fontSize: "12px" }}>{s.email}</span>
-              </div>
-              <div style={{ textAlign: "right" }}>
-                <span style={{ color: t.color, fontFamily: "'Cormorant Garamond', serif", fontSize: "26px", fontWeight: 300 }}>{s.pct}</span>
-                <span style={{ color: "#333", fontSize: "11px" }}>/100</span>
-                <p style={{ fontSize: "10px", color: "#2a2a2a", marginTop: "2px" }}>{t.label} · {s.time}</p>
-              </div>
+    <div style={{ maxWidth: "700px", margin: "0 auto", textAlign: "left" }}>
+  <p style={{ fontSize: "10px", letterSpacing: "3px", textTransform: "uppercase", color: "#333", marginBottom: "24px" }}>
+    Submissions · {submissions.length} total
+  </p>
+  {adminLoading ? (
+    <p style={{ fontSize: "13px", color: "#444", letterSpacing: "1px" }}>Loading submissions...</p>
+  ) : submissions.length === 0 ? (
+    <p style={{ fontSize: "13px", color: "#333" }}>No submissions yet.</p>
+  ) : (
+    (() => {
+      const grouped = {};
+      submissions.forEach((s) => {
+        const date = s.time ? s.time.split(",")[0] : "Unknown";
+        if (!grouped[date]) grouped[date] = [];
+        grouped[date].push(s);
+      });
+      const sortedDates = Object.keys(grouped).sort((a, b) => new Date(b) - new Date(a));
+      return sortedDates.map((date) => {
+        const daySubmissions = [...grouped[date]].sort((a, b) => b.pct - a.pct);
+        return (
+          <div key={date} style={{ marginBottom: "32px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "16px" }}>
+              <p style={{ fontSize: "11px", letterSpacing: "2px", textTransform: "uppercase", color: "#E87B4A" }}>{date}</p>
+              <div style={{ flex: 1, height: "1px", background: "#1a1a1a" }} />
+              <p style={{ fontSize: "11px", color: "#333" }}>{daySubmissions.length} submissions</p>
             </div>
-          );
-        })
+            {daySubmissions.map((s, i) => {
+  const t = getTier(s.score);
+  const expanded = expandedRows[s.id] || false;
+  return (
+    <div key={i} style={{ borderBottom: "1px solid #111", opacity: s.contacted ? 0.35 : 1, transition: "opacity 0.2s" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "13px 0" }}>
+        <div style={{ flex: 1 }}>
+          <span style={{ color: "#c8c4bc", fontSize: "18px", fontWeight: 500, display: "block", marginBottom: "6px" }}>{s.name}</span>
+<div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+  <span style={{ color: "#666", fontSize: "12px" }}>{s.email}</span>
+          <button
+  onClick={() => {
+    navigator.clipboard.writeText(s.email);
+    setCopiedId(s.id);
+    setTimeout(() => setCopiedId(null), 1500);
+  }}
+  style={{ background: "transparent", border: "none", color: copiedId === s.id ? "#4caf50" : "#666", fontSize: "10px", cursor: "pointer", marginLeft: "8px", padding: "2px 6px", borderRadius: "4px", transition: "color 0.15s" }}
+>
+  {copiedId === s.id ? (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+  ) : (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+  )}
+</button>
+</div>
+        </div>
+        <div style={{ textAlign: "right", marginLeft: "16px", display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "6px" }}>
+          <div>
+            <span style={{ color: t.color, fontFamily: "'Cormorant Garamond', serif", fontSize: "26px", fontWeight: 300 }}>{s.pct}</span>
+            <span style={{ color: "#333", fontSize: "11px" }}>/100</span>
+          </div>
+          <p style={{ fontSize: "10px", color: t.color, letterSpacing: "1px" }}>{t.label}</p>
+          <p style={{ fontSize: "10px", color: "#555" }}>{s.time ? s.time.split(",")[1] : ""}</p>
+          <div style={{ display: "flex", gap: "6px" }}>
+            <button
+              onClick={() => toggleExpanded(s.id)}
+              style={{
+                background: expanded ? "#1a1a2e" : "transparent",
+                border: expanded ? "1px solid #E87B4A" : "1px solid #333",
+                borderRadius: "100px",
+                padding: "4px 12px",
+                fontSize: "10px",
+                color: expanded ? "#E87B4A" : "#888",
+                cursor: "pointer",
+                letterSpacing: "1px",
+                textTransform: "uppercase",
+                transition: "all 0.2s",
+              }}
+            >
+              {expanded ? "Hide answers" : "View answers"}
+            </button>
+            <button
+              onClick={() => updateContacted(s.id, s.contacted)}
+              style={{
+                background: s.contacted ? "#1a3a1a" : "transparent",
+                border: s.contacted ? "1px solid #2d6a2d" : "1px solid #333",
+                borderRadius: "100px",
+                padding: "4px 12px",
+                fontSize: "10px",
+                color: s.contacted ? "#4caf50" : "#888",
+                cursor: "pointer",
+                letterSpacing: "1px",
+                textTransform: "uppercase",
+                transition: "all 0.2s",
+              }}
+            >
+              {s.contacted ? "Contacted" : "Mark contacted"}
+            </button>
+          </div>
+        </div>
+      </div>
+      {expanded && (
+        <div style={{ paddingBottom: "12px", display: "flex", flexWrap: "wrap", gap: "6px" }}>
+          {Object.entries(s.answers).map(([key, val]) => (
+            <span key={key} style={{ fontSize: "10px", color: "#888", background: "#111", border: "1px solid #1a1a1a", borderRadius: "4px", padding: "4px 10px" }}>
+              <span style={{ color: "#444" }}>{key}: </span>{val}
+            </span>
+          ))}
+        </div>
       )}
     </div>
+  );
+})}
+          </div>
+        );
+      });
+    })()
+  )}
+</div>
   )}
 </div>
     </div>
