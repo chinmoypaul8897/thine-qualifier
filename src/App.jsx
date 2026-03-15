@@ -307,7 +307,7 @@ export default function App() {
         score: newScore,
         pct: Math.round((newScore / MAX_SCORE) * 100),
         tier: getTier(newScore).label,
-        time: new Date().toLocaleString(),
+        time: new Date().toLocaleDateString('en-IN') + ", " + new Date().toLocaleTimeString('en-IN', {hour: '2-digit', minute: '2-digit'}),
         answers: newAnswers,
       };
       setScore(newScore);
@@ -580,7 +580,7 @@ export default function App() {
   const expanded = expandedRows[s.id] || false;
   return (
     <div key={i} style={{ borderBottom: "1px solid #111", opacity: s.contacted ? 0.35 : 1, transition: "opacity 0.2s" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "13px 0" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: "13px 0", flexWrap: "wrap", gap: "12px" }}>
         <div style={{ flex: 1 }}>
           <span style={{ color: "#c8c4bc", fontSize: "18px", fontWeight: 500, display: "block", marginBottom: "6px" }}>{s.name}</span>
 <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
@@ -601,7 +601,7 @@ export default function App() {
 </button>
 </div>
         </div>
-        <div style={{ textAlign: "right", marginLeft: "16px", display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "6px" }}>
+        <div style={{ textAlign: "right", display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "6px", minWidth: "120px" }}>
           <div>
             <span style={{ color: t.color, fontFamily: "'Cormorant Garamond', serif", fontSize: "26px", fontWeight: 300 }}>{s.pct}</span>
             <span style={{ color: "#333", fontSize: "11px" }}>/100</span>
