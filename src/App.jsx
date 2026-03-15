@@ -238,6 +238,7 @@ const styles = {
 };
 
 export default function App() {
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 600);
   const [adminLoading, setAdminLoading] = useState(false);
   const [copiedId, setCopiedId] = useState(null);
   const [screen, setScreen] = useState("intro");
@@ -580,8 +581,7 @@ export default function App() {
   const expanded = expandedRows[s.id] || false;
   return (
     <div key={i} style={{ borderBottom: "1px solid #111", opacity: s.contacted ? 0.35 : 1, transition: "opacity 0.2s" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: "13px 0", flexWrap: "wrap", gap: "12px" }}>
-        <div style={{ flex: 1 }}>
+<div style={{ display: "flex", justifyContent: "space-between", alignItems: isMobile ? "flex-start" : "center", flexDirection: isMobile ? "column" : "row", padding: "13px 0", gap: "12px" }}>        <div style={{ flex: 1 }}>
           <span style={{ color: "#c8c4bc", fontSize: "18px", fontWeight: 500, display: "block", marginBottom: "6px" }}>{s.name}</span>
 <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
   <span style={{ color: "#666", fontSize: "12px" }}>{s.email}</span>
@@ -601,8 +601,8 @@ export default function App() {
 </button>
 </div>
         </div>
-        <div style={{ textAlign: "right", marginLeft: "16px", display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "6px", minWidth: "120px" }}>
-          <div>
+            <div style={{ textAlign: isMobile ? "left" : "right", marginLeft: isMobile ? "0" : "16px", display: "flex", flexDirection: "column", alignItems: isMobile ? "flex-start" : "flex-end", gap: "6px", minWidth: isMobile ? "100%" : "120px", borderTop: isMobile ? "1px solid #111" : "none", paddingTop: isMobile ? "10px" : "0" }}>          
+            <div>
             <span style={{ color: t.color, fontFamily: "'Cormorant Garamond', serif", fontSize: "26px", fontWeight: 300 }}>{s.pct}</span>
             <span style={{ color: "#333", fontSize: "11px" }}>/100</span>
           </div>
