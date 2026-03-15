@@ -238,6 +238,7 @@ const styles = {
 };
 
 export default function App() {
+  const [showPassword, setShowPassword] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 600);
   const [adminLoading, setAdminLoading] = useState(false);
   const [copiedId, setCopiedId] = useState(null);
@@ -538,17 +539,41 @@ export default function App() {
       <div style={{ padding: "24px 36px", textAlign: "center", borderTop: "none" }}>
   {!adminOpen ? (
     <div style={{ display: "inline-flex", alignItems: "center", gap: "10px", background: "#111", border: "1px solid #1e1e1e", borderRadius: "100px", padding: "8px 18px" }}>
-      <span style={{ fontSize: "10px", letterSpacing: "2px", textTransform: "uppercase", color: "#333" }}>Admin</span>
-      <input
-        type="password"
-        placeholder="Only for admins"
-        value={adminInput}
-        onChange={(e) => { setAdminInput(e.target.value); setAdminError(false); }}
-        onKeyDown={handleAdminKey}
-        style={{ background: "transparent", border: "none", color: "#666", fontFamily: "'DM Sans', sans-serif", fontSize: "12px", outline: "none", width: "120px" }}
-      />
-      {adminError && <span style={{ fontSize: "11px", color: "#E87B4A" }}>incorrect</span>}
-    </div>
+  <span style={{ fontSize: "10px", letterSpacing: "2px", textTransform: "uppercase", color: "#333" }}>Admin</span>
+  <input
+    type={showPassword ? "text" : "password"}
+    placeholder="Only for admins"
+    value={adminInput}
+    onChange={(e) => { setAdminInput(e.target.value); setAdminError(false); }}
+    onKeyDown={handleAdminKey}
+    style={{ background: "transparent", border: "none", color: "#666", fontFamily: "'DM Sans', sans-serif", fontSize: "12px", outline: "none", width: "120px" }}
+  />
+  <button
+    onClick={() => setShowPassword(!showPassword)}
+    style={{ background: "transparent", border: "none", cursor: "pointer", color: "#444", padding: "0", display: "flex", alignItems: "center" }}
+  >
+    {showPassword ? (
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+    ) : (
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+    )}
+  </button>
+  <button
+    onClick={() => {
+      if (adminInput === ADMIN_PASSWORD) {
+        setAdminError(false);
+        setAdminOpen(true);
+        fetchSubmissions();
+      } else {
+        setAdminError(true);
+      }
+    }}
+    style={{ background: "transparent", border: "none", cursor: "pointer", color: "#E87B4A", padding: "0", display: "flex", alignItems: "center" }}
+  >
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+  </button>
+  {adminError && <span style={{ fontSize: "11px", color: "#E87B4A" }}>incorrect</span>}
+</div>
   ) : (
     <div style={{ maxWidth: "700px", margin: "0 auto", textAlign: "left" }}>
   <p style={{ fontSize: "10px", letterSpacing: "3px", textTransform: "uppercase", color: "#333", marginBottom: "24px" }}>
@@ -580,8 +605,7 @@ export default function App() {
   const t = getTier(s.score);
   const expanded = expandedRows[s.id] || false;
   return (
-    <div key={i} style={{ borderBottom: "1px solid #111", opacity: s.contacted ? 0.35 : 1, transition: "opacity 0.2s" }}>
-<div style={{ display: "flex", justifyContent: "space-between", alignItems: isMobile ? "flex-start" : "center", flexDirection: isMobile ? "column" : "row", padding: "13px 0", gap: "12px" }}>        <div style={{ flex: 1 }}>
+<div key={i} style={{ borderBottom: isMobile ? "1px solid #2a2a2a" : "1px solid #111", opacity: s.contacted ? 0.35 : 1, transition: "opacity 0.2s", marginBottom: isMobile ? "8px" : "0", paddingBottom: isMobile ? "8px" : "0" }}><div style={{ display: "flex", justifyContent: "space-between", alignItems: isMobile ? "flex-start" : "center", flexDirection: isMobile ? "column" : "row", padding: "13px 0", gap: "12px" }}>        <div style={{ flex: 1 }}>
           <span style={{ color: "#c8c4bc", fontSize: "18px", fontWeight: 500, display: "block", marginBottom: "6px" }}>{s.name}</span>
 <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
   <span style={{ color: "#666", fontSize: "12px" }}>{s.email}</span>
