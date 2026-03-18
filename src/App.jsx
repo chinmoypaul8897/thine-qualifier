@@ -294,11 +294,27 @@ export default function App() {
   }
 
   async function handleIntroSubmit() {
-    setChecking(true);
     setCheckError("");
+
+    const nameVal = name.trim();
+    const emailVal = email.trim();
+
+    const nameValid = nameVal.length >= 3 && !/\d/.test(nameVal);
+    const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal);
+
+    if (!nameValid) {
+      setCheckError("name");
+      return;
+    }
+    if (!emailValid) {
+      setCheckError("email");
+      return;
+    }
+
+    setChecking(true);
     try {
       const res = await fetch(
-        `https://api.airtable.com/v0/${import.meta.env.VITE_AIRTABLE_BASE_ID}/${import.meta.env.VITE_AIRTABLE_TABLE_ID}?filterByFormula=Email="${email.trim()}"`,
+        `https://api.airtable.com/v0/${import.meta.env.VITE_AIRTABLE_BASE_ID}/${import.meta.env.VITE_AIRTABLE_TABLE_ID}?filterByFormula=Email="${emailVal}"`,
         {
           headers: {
             Authorization: `Bearer ${import.meta.env.VITE_AIRTABLE_API_KEY}`,
@@ -309,7 +325,6 @@ export default function App() {
       if (data.records && data.records.length > 0) {
         const existing = data.records[0].fields;
         const existingScore = existing.Score || 0;
-        const existingTier = getTier(Math.round((existingScore / 100) * MAX_SCORE));
         setScore(Math.round((existingScore / 100) * MAX_SCORE));
         setSubmissions([{
           name: existing.Name,
@@ -509,20 +524,22 @@ export default function App() {
                 7 questions. Not to filter you out — to make sure early access goes to the right people.
               </p>
               <label style={styles.label}>Name</label>
-              <input
-                style={styles.input}
-                placeholder="Your name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
+<input
+  style={styles.input}
+  placeholder="Your name"
+  value={name}
+  onChange={(e) => { setName(e.target.value); setCheckError(""); }}
+/>
+{checkError === "name" && <p style={{ fontSize: "13px", color: "#E87B4A", marginTop: "-16px", marginBottom: "16px" }}>Please enter a valid name</p>}
               <label style={styles.label}>Email</label>
-              <input
-                style={styles.input}
-                placeholder="Your email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
+<input
+  style={styles.input}
+  placeholder="Your email"
+  type="email"
+  value={email}
+  onChange={(e) => { setEmail(e.target.value); setCheckError(""); }}
+/>
+{checkError === "email" && <p style={{ fontSize: "13px", color: "#E87B4A", marginTop: "-16px", marginBottom: "16px" }}>Please enter a valid email</p>}
               <button
   style={styles.btn(!name.trim() || !email.trim() || checking)}
   disabled={!name.trim() || !email.trim() || checking}
@@ -530,7 +547,6 @@ export default function App() {
 >
   {checking ? "Checking..." : "Find out →"}
 </button>
-{checkError && <p style={{ fontSize: "13px", color: "#E87B4A", marginTop: "12px" }}>{checkError}</p>}
             </>
           )}
 
