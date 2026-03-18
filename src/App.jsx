@@ -386,6 +386,22 @@ export default function App() {
       console.error("Failed to update contacted status:", e);
     }
   }
+  async function deleteSubmission(recordId) {
+    try {
+      await fetch(
+        `https://api.airtable.com/v0/${import.meta.env.VITE_AIRTABLE_BASE_ID}/${import.meta.env.VITE_AIRTABLE_TABLE_ID}/${recordId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${import.meta.env.VITE_AIRTABLE_API_KEY}`,
+          },
+        }
+      );
+      setSubmissions((prev) => prev.filter((s) => s.id !== recordId));
+    } catch (e) {
+      console.error("Failed to delete submission:", e);
+    }
+  }
   function toggleExpanded(id) {
     setExpandedRows(prev => ({ ...prev, [id]: !prev[id] }));
   }
@@ -675,6 +691,29 @@ const sortedDates = Object.keys(grouped).sort((a, b) => {
             >
               {s.contacted ? "Contacted" : "Mark contacted"}
             </button>
+            <button
+  onClick={() => {
+    if (window.confirm("Delete this submission permanently?")) {
+      deleteSubmission(s.id);
+    }
+  }}
+  style={{
+    background: "transparent",
+    border: "1px solid #333",
+    borderRadius: "100px",
+    padding: "4px 12px",
+    fontSize: "10px",
+    color: "#555",
+    cursor: "pointer",
+    letterSpacing: "1px",
+    textTransform: "uppercase",
+    transition: "all 0.2s",
+  }}
+  onMouseEnter={e => e.currentTarget.style.color = "#ff4444"}
+  onMouseLeave={e => e.currentTarget.style.color = "#555"}
+>
+  Delete
+</button>
           </div>
         </div>
       </div>
