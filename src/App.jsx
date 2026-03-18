@@ -238,6 +238,8 @@ const styles = {
 };
 
 export default function App() {
+  const [checking, setChecking] = useState(false);
+  const [checkError, setCheckError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 600);
   const [adminLoading, setAdminLoading] = useState(false);
@@ -288,6 +290,43 @@ export default function App() {
       });
     } catch (e) {
       console.error("Airtable save failed:", e);
+    }
+  }
+
+  async function handleIntroSubmit() {
+    setChecking(true);
+    setCheckError("");
+    try {
+      const res = await fetch(
+        `https://api.airtable.com/v0/${import.meta.env.VITE_AIRTABLE_BASE_ID}/${import.meta.env.VITE_AIRTABLE_TABLE_ID}?filterByFormula=Email="${email.trim()}"`,
+        {
+          headers: {
+            Authorization: `Bearer ${import.meta.env.VITE_AIRTABLE_API_KEY}`,
+          },
+        }
+      );
+      const data = await res.json();
+      if (data.records && data.records.length > 0) {
+        const existing = data.records[0].fields;
+        const existingScore = existing.Score || 0;
+        const existingTier = getTier(Math.round((existingScore / 100) * MAX_SCORE));
+        setScore(Math.round((existingScore / 100) * MAX_SCORE));
+        setSubmissions([{
+          name: existing.Name,
+          email: existing.Email,
+          pct: existingScore,
+          tier: existing.Tier,
+          score: Math.round((existingScore / 100) * MAX_SCORE),
+        }]);
+        setScreen("result");
+      } else {
+        setScreen("question");
+      }
+    } catch (e) {
+      console.error("Check failed:", e);
+      setScreen("question");
+    } finally {
+      setChecking(false);
     }
   }
 
@@ -485,12 +524,13 @@ export default function App() {
                 onChange={(e) => setEmail(e.target.value)}
               />
               <button
-                style={styles.btn(!name.trim() || !email.trim())}
-                disabled={!name.trim() || !email.trim()}
-                onClick={() => setScreen("question")}
-              >
-                Find out →
-              </button>
+  style={styles.btn(!name.trim() || !email.trim() || checking)}
+  disabled={!name.trim() || !email.trim() || checking}
+  onClick={handleIntroSubmit}
+>
+  {checking ? "Checking..." : "Find out →"}
+</button>
+{checkError && <p style={{ fontSize: "13px", color: "#E87B4A", marginTop: "12px" }}>{checkError}</p>}
             </>
           )}
 
