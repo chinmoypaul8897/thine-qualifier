@@ -103,14 +103,14 @@ function getTier(score) {
 
 const styles = {
   wrap: {
-  minHeight: "100vh",
-  width: "100%",
-  maxWidth: "100vw",
-  overflowX: "hidden",
-  background: "#0a0a0a",
-  display: "flex",
-  flexDirection: "column",
-},
+    minHeight: "100vh",
+    width: "100%",
+    maxWidth: "100vw",
+    overflowX: "hidden",
+    background: "#0a0a0a",
+    display: "flex",
+    flexDirection: "column",
+  },
   header: {
     padding: "22px 36px",
     display: "flex",
@@ -118,12 +118,12 @@ const styles = {
     justifyContent: "space-between",
   },
   logo: {
-  fontFamily: "'Cormorant Garamond', serif",
-  fontSize: "40px",
-  fontWeight: 400,
-  color: "#f0ede6",
-  letterSpacing: "-0.5px",
-},
+    fontFamily: "'Cormorant Garamond', serif",
+    fontSize: "40px",
+    fontWeight: 400,
+    color: "#f0ede6",
+    letterSpacing: "-0.5px",
+  },
   progBar: { height: "2px", background: "#141414" },
   progFill: (pct) => ({
     height: "2px",
@@ -137,7 +137,6 @@ const styles = {
     flexDirection: "column",
     alignItems: "center",
     justifyContent: "center",
-    
   },
   inner: { maxWidth: "560px", width: "100%" },
   eyebrow: {
@@ -262,32 +261,37 @@ export default function App() {
 
   async function saveToAirtable(submissionData) {
     try {
-      await fetch(`https://api.airtable.com/v0/${import.meta.env.VITE_AIRTABLE_BASE_ID}/${import.meta.env.VITE_AIRTABLE_TABLE_ID}`, {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${import.meta.env.VITE_AIRTABLE_API_KEY}`,
-          "Content-Type": "application/json",
+      await fetch(
+        `https://api.airtable.com/v0/${import.meta.env.VITE_AIRTABLE_BASE_ID}/${import.meta.env.VITE_AIRTABLE_TABLE_ID}`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${import.meta.env.VITE_AIRTABLE_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            records: [
+              {
+                fields: {
+                  Name: submissionData.name,
+                  Email: submissionData.email,
+                  Score: submissionData.pct,
+                  Tier: submissionData.tier,
+                  Time: submissionData.time,
+                  Role: submissionData.answers[0],
+                  "Daily Conversations": submissionData.answers[1],
+                  "Signal Loss": submissionData.answers[2],
+                  "Current Challenge": submissionData.answers[3],
+                  "Capture System": submissionData.answers[4],
+                  "Decision Making": submissionData.answers[5],
+                  Commitment: submissionData.answers[6],
+                  Contacted: false,
+                },
+              },
+            ],
+          }),
         },
-        body: JSON.stringify({
-          records: [{
-            fields: {
-              Name: submissionData.name,
-              Email: submissionData.email,
-              Score: submissionData.pct,
-              Tier: submissionData.tier,
-              Time: submissionData.time,
-              Role: submissionData.answers[0],
-              "Daily Conversations": submissionData.answers[1],
-              "Signal Loss": submissionData.answers[2],
-              "Current Challenge": submissionData.answers[3],
-              "Capture System": submissionData.answers[4],
-              "Decision Making": submissionData.answers[5],
-              Commitment: submissionData.answers[6],
-              Contacted: false,
-            }
-          }]
-        }),
-      });
+      );
     } catch (e) {
       console.error("Airtable save failed:", e);
     }
@@ -319,20 +323,22 @@ export default function App() {
           headers: {
             Authorization: `Bearer ${import.meta.env.VITE_AIRTABLE_API_KEY}`,
           },
-        }
+        },
       );
       const data = await res.json();
       if (data.records && data.records.length > 0) {
         const existing = data.records[0].fields;
         const existingScore = existing.Score || 0;
         setScore(Math.round((existingScore / 100) * MAX_SCORE));
-        setSubmissions([{
-          name: existing.Name,
-          email: existing.Email,
-          pct: existingScore,
-          tier: existing.Tier,
-          score: Math.round((existingScore / 100) * MAX_SCORE),
-        }]);
+        setSubmissions([
+          {
+            name: existing.Name,
+            email: existing.Email,
+            pct: existingScore,
+            tier: existing.Tier,
+            score: Math.round((existingScore / 100) * MAX_SCORE),
+          },
+        ]);
         setScreen("result");
       } else {
         setScreen("question");
@@ -357,20 +363,26 @@ export default function App() {
         setSelected(null);
       } else {
         const newAnswers = [...answers, opt.l];
-      const submission = {
-        name,
-        email,
-        score: newScore,
-        pct: Math.round((newScore / MAX_SCORE) * 100),
-        tier: getTier(newScore).label,
-        time: new Date().toLocaleDateString('en-IN') + ", " + new Date().toLocaleTimeString('en-IN', {hour: '2-digit', minute: '2-digit'}),
-        answers: newAnswers,
-      };
-      setScore(newScore);
-      setAnswers(newAnswers);
-      setSubmissions((prev) => [...prev, submission]);
-      saveToAirtable(submission);
-      setScreen("result");
+        const submission = {
+          name,
+          email,
+          score: newScore,
+          pct: Math.round((newScore / MAX_SCORE) * 100),
+          tier: getTier(newScore).label,
+          time:
+            new Date().toLocaleDateString("en-IN") +
+            ", " +
+            new Date().toLocaleTimeString("en-IN", {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+          answers: newAnswers,
+        };
+        setScore(newScore);
+        setAnswers(newAnswers);
+        setSubmissions((prev) => [...prev, submission]);
+        saveToAirtable(submission);
+        setScreen("result");
       }
     }, 380);
   }
@@ -384,7 +396,7 @@ export default function App() {
           headers: {
             Authorization: `Bearer ${import.meta.env.VITE_AIRTABLE_API_KEY}`,
           },
-        }
+        },
       );
       const data = await res.json();
       if (!data.records) return;
@@ -417,8 +429,8 @@ export default function App() {
   async function updateContacted(recordId, currentStatus) {
     setSubmissions((prev) =>
       prev.map((s) =>
-        s.id === recordId ? { ...s, contacted: !currentStatus } : s
-      )
+        s.id === recordId ? { ...s, contacted: !currentStatus } : s,
+      ),
     );
     try {
       await fetch(
@@ -434,7 +446,7 @@ export default function App() {
               Contacted: !currentStatus,
             },
           }),
-        }
+        },
       );
     } catch (e) {
       console.error("Failed to update contacted status:", e);
@@ -449,7 +461,7 @@ export default function App() {
           headers: {
             Authorization: `Bearer ${import.meta.env.VITE_AIRTABLE_API_KEY}`,
           },
-        }
+        },
       );
       setSubmissions((prev) => prev.filter((s) => s.id !== recordId));
     } catch (e) {
@@ -457,7 +469,7 @@ export default function App() {
     }
   }
   function toggleExpanded(id) {
-    setExpandedRows(prev => ({ ...prev, [id]: !prev[id] }));
+    setExpandedRows((prev) => ({ ...prev, [id]: !prev[id] }));
   }
 
   function handleAdminKey(e) {
@@ -509,44 +521,83 @@ export default function App() {
       )}
 
       {/* BODY */}
-      <div style={{...styles.body, padding: screen === "question" ? "56px 24px" : screen === "result" ? "32px 24px" : "0px 24px"}}>
+      <div
+        style={{
+          ...styles.body,
+          padding:
+            screen === "question"
+              ? "56px 24px"
+              : screen === "result"
+                ? "32px 24px"
+                : "0px 24px",
+        }}
+      >
         <div style={styles.inner}>
-
           {/* INTRO */}
           {screen === "intro" && (
             <>
               <p style={styles.eyebrow}>Early Access</p>
               <h1 style={styles.h1}>
-                Are you who<br />
+                Are you who
+                <br />
                 <em style={{ fontStyle: "italic" }}>Thine</em> is built for?
               </h1>
               <p style={styles.sub}>
-                7 questions. Not to filter you out — to make sure early access goes to the right people.
+                7 questions. Not to filter you out — to make sure early access
+                goes to the right people.
               </p>
               <label style={styles.label}>Name</label>
-<input
-  style={styles.input}
-  placeholder="Your name"
-  value={name}
-  onChange={(e) => { setName(e.target.value); setCheckError(""); }}
-/>
-{checkError === "name" && <p style={{ fontSize: "13px", color: "#E87B4A", marginTop: "-16px", marginBottom: "16px" }}>Please enter a valid name</p>}
+              <input
+                style={styles.input}
+                placeholder="Your name"
+                value={name}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  setCheckError("");
+                }}
+              />
+              {checkError === "name" && (
+                <p
+                  style={{
+                    fontSize: "13px",
+                    color: "#E87B4A",
+                    marginTop: "-16px",
+                    marginBottom: "16px",
+                  }}
+                >
+                  Please enter a valid name
+                </p>
+              )}
               <label style={styles.label}>Email</label>
-<input
-  style={styles.input}
-  placeholder="Your email"
-  type="email"
-  value={email}
-  onChange={(e) => { setEmail(e.target.value); setCheckError(""); }}
-/>
-{checkError === "email" && <p style={{ fontSize: "13px", color: "#E87B4A", marginTop: "-16px", marginBottom: "16px" }}>Please enter a valid email</p>}
+              <input
+                style={styles.input}
+                placeholder="Your email"
+                type="email"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setCheckError("");
+                }}
+              />
+              {checkError === "email" && (
+                <p
+                  style={{
+                    fontSize: "13px",
+                    color: "#E87B4A",
+                    marginTop: "-16px",
+                    marginBottom: "16px",
+                  }}
+                >
+                  Please enter a valid email
+                </p>
+              )}
               <button
-  style={styles.btn(!name.trim() || !email.trim() || checking)}
-  disabled={!name.trim() || !email.trim() || checking}
-  onClick={handleIntroSubmit}
->
-  {checking ? "Checking..." : "Find out →"}
-</button>
+                style={styles.btn(!name.trim() || !email.trim() || checking)}
+                disabled={!name.trim() || !email.trim() || checking}
+                onClick={handleIntroSubmit}
+              >
+                {checking ? "Checking..." : "Find out →"}
+              </button>
             </>
           )}
 
@@ -571,31 +622,107 @@ export default function App() {
           {/* RESULT */}
           {screen === "result" && (
             <div style={{ textAlign: "center" }}>
-              <div style={{
-                width: "56px", height: "56px", borderRadius: "50%",
-                border: `2px solid ${tier.color}`,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                margin: "0 auto 24px"
-              }}>
-                <div style={{ width: "20px", height: "20px", borderRadius: "50%", background: tier.color }} />
+              <div
+                style={{
+                  width: "56px",
+                  height: "56px",
+                  borderRadius: "50%",
+                  border: `2px solid ${tier.color}`,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  margin: "0 auto 24px",
+                }}
+              >
+                <div
+                  style={{
+                    width: "20px",
+                    height: "20px",
+                    borderRadius: "50%",
+                    background: tier.color,
+                  }}
+                />
               </div>
-              <p style={{ fontSize: "10px", letterSpacing: "4px", textTransform: "uppercase", color: tier.color, marginBottom: "16px" }}>
+              <p
+                style={{
+                  fontSize: "10px",
+                  letterSpacing: "4px",
+                  textTransform: "uppercase",
+                  color: tier.color,
+                  marginBottom: "16px",
+                }}
+              >
                 {tier.label}
               </p>
-              <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(26px,5vw,40px)", fontWeight: 400, lineHeight: 1.2, letterSpacing: "-0.5px", color: "#f0ede6", marginBottom: "14px" }}>
+              <h2
+                style={{
+                  fontFamily: "'Cormorant Garamond', serif",
+                  fontSize: "clamp(26px,5vw,40px)",
+                  fontWeight: 400,
+                  lineHeight: 1.2,
+                  letterSpacing: "-0.5px",
+                  color: "#f0ede6",
+                  marginBottom: "14px",
+                }}
+              >
                 {tier.headline}
               </h2>
-              <p style={{ fontSize: "15px", color: "#888", lineHeight: 1.7, maxWidth: "420px", margin: "0 auto 36px" }}>
+              <p
+                style={{
+                  fontSize: "15px",
+                  color: "#888",
+                  lineHeight: 1.7,
+                  maxWidth: "420px",
+                  margin: "0 auto 36px",
+                }}
+              >
                 {tier.body}
               </p>
-              <div style={{ background: "#0f0f0f", border: "1px solid #1c1c1c", borderRadius: "12px", padding: "22px 28px", marginBottom: "28px" }}>
-                <p style={{ fontSize: "11px", color: "#444", letterSpacing: "2px", textTransform: "uppercase", marginBottom: "6px" }}>Signal score</p>
-                <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "52px", fontWeight: 300, color: tier.color, lineHeight: 1 }}>
-                  {pct}<span style={{ fontSize: "22px", color: "#333" }}>/100</span>
+              <div
+                style={{
+                  background: "#0f0f0f",
+                  border: "1px solid #1c1c1c",
+                  borderRadius: "12px",
+                  padding: "22px 28px",
+                  marginBottom: "28px",
+                }}
+              >
+                <p
+                  style={{
+                    fontSize: "11px",
+                    color: "#444",
+                    letterSpacing: "2px",
+                    textTransform: "uppercase",
+                    marginBottom: "6px",
+                  }}
+                >
+                  Signal score
                 </p>
-                <p style={{ fontSize: "12px", color: "#444", marginTop: "10px" }}>{name} · {email}</p>
+                <p
+                  style={{
+                    fontFamily: "'Cormorant Garamond', serif",
+                    fontSize: "52px",
+                    fontWeight: 300,
+                    color: tier.color,
+                    lineHeight: 1,
+                  }}
+                >
+                  {pct}
+                  <span style={{ fontSize: "22px", color: "#333" }}>/100</span>
+                </p>
+                <p
+                  style={{ fontSize: "12px", color: "#444", marginTop: "10px" }}
+                >
+                  {name} · {email}
+                </p>
               </div>
-              <p style={{ fontSize: "12px", color: "#444", marginBottom: "24px" }}>
+              <p
+                style={{
+                  fontSize: "12px",
+                  color: "#444",
+                  marginBottom: "24px",
+                }}
+              >
                 Share your result — the right people will know what it means.
               </p>
               <button style={styles.btn(false)} onClick={restart}>
@@ -603,196 +730,493 @@ export default function App() {
               </button>
             </div>
           )}
-
         </div>
       </div>
 
       {/* FOOTER — ADMIN */}
-      <div style={{ padding: "24px 36px", textAlign: "center", borderTop: "none" }}>
-  {!adminOpen ? (
-    <div style={{ display: "inline-flex", alignItems: "center", gap: "10px", background: "#111", border: "1px solid #1e1e1e", borderRadius: "100px", padding: "8px 18px" }}>
-  <span style={{ fontSize: "10px", letterSpacing: "2px", textTransform: "uppercase", color: "#333" }}>Admin</span>
-  <input
-    type={showPassword ? "text" : "password"}
-    placeholder="Only for admins"
-    value={adminInput}
-    onChange={(e) => { setAdminInput(e.target.value); setAdminError(false); }}
-    onKeyDown={handleAdminKey}
-    style={{ background: "transparent", border: "none", color: "#666", fontFamily: "'DM Sans', sans-serif", fontSize: "12px", outline: "none", width: "120px" }}
-  />
-  <button
-    onClick={() => setShowPassword(!showPassword)}
-    style={{ background: "transparent", border: "none", cursor: "pointer", color: "#444", padding: "0", display: "flex", alignItems: "center" }}
-  >
-    {showPassword ? (
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-    ) : (
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-    )}
-  </button>
-  <button
-    onClick={() => {
-      if (adminInput === ADMIN_PASSWORD) {
-        setAdminError(false);
-        setAdminOpen(true);
-        fetchSubmissions();
-      } else {
-        setAdminError(true);
-      }
-    }}
-    style={{ background: "transparent", border: "none", cursor: "pointer", color: "#E87B4A", padding: "0", display: "flex", alignItems: "center" }}
-  >
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-  </button>
-  {adminError && <span style={{ fontSize: "11px", color: "#E87B4A" }}>incorrect</span>}
-</div>
-  ) : (
-    <div style={{ maxWidth: "700px", margin: "0 auto", textAlign: "left" }}>
-  <p style={{ fontSize: "10px", letterSpacing: "3px", textTransform: "uppercase", color: "#666", marginBottom: "24px" }}>
-    Submissions · {submissions.length} total
-  </p>
-  {adminLoading ? (
-    <p style={{ fontSize: "13px", color: "#444", letterSpacing: "1px" }}>Loading submissions...</p>
-  ) : submissions.length === 0 ? (
-    <p style={{ fontSize: "13px", color: "#333" }}>No submissions yet.</p>
-  ) : (
-    (() => {
-      const grouped = {};
-submissions.forEach((s) => {
-  const date = s.time ? s.time.split(",")[0] : "Unknown";
-  if (!grouped[date]) grouped[date] = [];
-  grouped[date].push(s);
-});
-const sortedDates = Object.keys(grouped).sort((a, b) => {
-  const parseDate = (d) => {
-    const parts = d.split("/");
-    return new Date(parts[2], parts[1] - 1, parts[0]);
-  };
-  return parseDate(b) - parseDate(a);
-});
-      return sortedDates.map((date) => {
-        const daySubmissions = [...grouped[date]].sort((a, b) => b.pct - a.pct);
-        return (
-          <div key={date} style={{ marginBottom: "32px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "16px" }}>
-              <p style={{ fontSize: "11px", letterSpacing: "2px", textTransform: "uppercase", color: "#E87B4A" }}>{date}</p>
-              <div style={{ flex: 1, height: "1px", background: "#1a1a1a" }} />
-              <p style={{ fontSize: "11px", color: "#f0ede6" }}>
-  {daySubmissions.length} {date === new Date().toLocaleDateString('en-IN') ? "today" : "submissions"}
-</p>
-            </div>
-            {daySubmissions.map((s, i) => {
-  const t = getTier(s.score);
-  const expanded = expandedRows[s.id] || false;
-  return (
-<div key={i} style={{ borderBottom: isMobile ? "1px solid #2a2a2a" : "1px solid #111", opacity: s.contacted ? 0.35 : 1, transition: "opacity 0.2s", marginBottom: isMobile ? "8px" : "0", paddingBottom: isMobile ? "8px" : "0" }}><div style={{ display: "flex", justifyContent: "space-between", alignItems: isMobile ? "flex-start" : "center", flexDirection: isMobile ? "column" : "row", padding: "13px 0", gap: "12px" }}>        <div style={{ flex: 1 }}>
-          <span style={{ color: "#c8c4bc", fontSize: "18px", fontWeight: 500, display: "block", marginBottom: "6px" }}>{s.name}</span>
-<div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-  <span style={{ color: "#666", fontSize: "12px" }}>{s.email}</span>
-          <button
-  onClick={() => {
-    navigator.clipboard.writeText(s.email);
-    setCopiedId(s.id);
-    setTimeout(() => setCopiedId(null), 1500);
-  }}
-  style={{ background: "transparent", border: "none", color: copiedId === s.id ? "#4caf50" : "#666", fontSize: "10px", cursor: "pointer", marginLeft: "8px", padding: "2px 6px", borderRadius: "4px", transition: "color 0.15s" }}
->
-  {copiedId === s.id ? (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-  ) : (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-  )}
-</button>
-</div>
-        </div>
-            <div style={{ textAlign: isMobile ? "left" : "right", marginLeft: isMobile ? "0" : "16px", display: "flex", flexDirection: "column", alignItems: isMobile ? "flex-start" : "flex-end", gap: "6px", minWidth: isMobile ? "100%" : "120px", borderTop: isMobile ? "1px solid #111" : "none", paddingTop: isMobile ? "10px" : "0" }}>          
-            <div>
-            <span style={{ color: t.color, fontFamily: "'Cormorant Garamond', serif", fontSize: "26px", fontWeight: 300 }}>{s.pct}</span>
-            <span style={{ color: "#333", fontSize: "11px" }}>/100</span>
-          </div>
-          <p style={{ fontSize: "10px", color: t.color, letterSpacing: "1px" }}>{t.label}</p>
-          <p style={{ fontSize: "10px", color: "#555" }}>{s.time ? s.time.split(",")[1] : ""}</p>
-          <div style={{ display: "flex", gap: "6px" }}>
-            <button
-              onClick={() => toggleExpanded(s.id)}
+      <div
+        style={{ padding: "24px 36px", textAlign: "center", borderTop: "none" }}
+      >
+        {!adminOpen ? (
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "10px",
+              background: "#111",
+              border: "1px solid #1e1e1e",
+              borderRadius: "100px",
+              padding: "8px 18px",
+            }}
+          >
+            <span
               style={{
-                background: expanded ? "#1a1a2e" : "transparent",
-                border: expanded ? "1px solid #E87B4A" : "1px solid #333",
-                borderRadius: "100px",
-                padding: "4px 12px",
                 fontSize: "10px",
-                color: expanded ? "#E87B4A" : "#888",
-                cursor: "pointer",
-                letterSpacing: "1px",
+                letterSpacing: "2px",
                 textTransform: "uppercase",
-                transition: "all 0.2s",
+                color: "#333",
               }}
             >
-              {expanded ? "Hide answers" : "View answers"}
-            </button>
-            <button
-              onClick={() => updateContacted(s.id, s.contacted)}
-              style={{
-                background: s.contacted ? "#1a3a1a" : "transparent",
-                border: s.contacted ? "1px solid #2d6a2d" : "1px solid #333",
-                borderRadius: "100px",
-                padding: "4px 12px",
-                fontSize: "10px",
-                color: s.contacted ? "#4caf50" : "#888",
-                cursor: "pointer",
-                letterSpacing: "1px",
-                textTransform: "uppercase",
-                transition: "all 0.2s",
-              }}
-            >
-              {s.contacted ? "Contacted" : "Mark contacted"}
-            </button>
-            <button
-  onClick={() => {
-    if (window.confirm("Delete this submission permanently?")) {
-      deleteSubmission(s.id);
-    }
-  }}
-  style={{
-    background: "transparent",
-    border: "1px solid #333",
-    borderRadius: "100px",
-    padding: "4px 12px",
-    fontSize: "10px",
-    color: "#555",
-    cursor: "pointer",
-    letterSpacing: "1px",
-    textTransform: "uppercase",
-    transition: "all 0.2s",
-  }}
-  onMouseEnter={e => e.currentTarget.style.color = "#ff4444"}
-  onMouseLeave={e => e.currentTarget.style.color = "#555"}
->
-  Delete
-</button>
-          </div>
-        </div>
-      </div>
-      {expanded && (
-        <div style={{ paddingBottom: "12px", display: "flex", flexWrap: "wrap", gap: "6px" }}>
-          {Object.entries(s.answers).map(([key, val]) => (
-            <span key={key} style={{ fontSize: "10px", color: "#888", background: "#111", border: "1px solid #1a1a1a", borderRadius: "4px", padding: "4px 10px" }}>
-              <span style={{ color: "#444" }}>{key}: </span>{val}
+              Admin
             </span>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-})}
+            <input
+              type={showPassword ? "text" : "password"}
+              placeholder="Only for admins"
+              value={adminInput}
+              onChange={(e) => {
+                setAdminInput(e.target.value);
+                setAdminError(false);
+              }}
+              onKeyDown={handleAdminKey}
+              style={{
+                background: "transparent",
+                border: "none",
+                color: "#666",
+                fontFamily: "'DM Sans', sans-serif",
+                fontSize: "12px",
+                outline: "none",
+                width: "120px",
+              }}
+            />
+            <button
+              onClick={() => setShowPassword(!showPassword)}
+              style={{
+                background: "transparent",
+                border: "none",
+                cursor: "pointer",
+                color: "#444",
+                padding: "0",
+                display: "flex",
+                alignItems: "center",
+              }}
+            >
+              {showPassword ? (
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
+                  <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+                  <line x1="1" y1="1" x2="23" y2="23" />
+                </svg>
+              ) : (
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+              )}
+            </button>
+            <button
+              onClick={() => {
+                if (adminInput === ADMIN_PASSWORD) {
+                  setAdminError(false);
+                  setAdminOpen(true);
+                  fetchSubmissions();
+                } else {
+                  setAdminError(true);
+                }
+              }}
+              style={{
+                background: "transparent",
+                border: "none",
+                cursor: "pointer",
+                color: "#E87B4A",
+                padding: "0",
+                display: "flex",
+                alignItems: "center",
+              }}
+            >
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <line x1="5" y1="12" x2="19" y2="12" />
+                <polyline points="12 5 19 12 12 19" />
+              </svg>
+            </button>
+            {adminError && (
+              <span style={{ fontSize: "11px", color: "#E87B4A" }}>
+                incorrect
+              </span>
+            )}
           </div>
-        );
-      });
-    })()
-  )}
-</div>
-  )}
-</div>
+        ) : (
+          <div
+            style={{ maxWidth: "700px", margin: "0 auto", textAlign: "left" }}
+          >
+            <p
+              style={{
+                fontSize: "10px",
+                letterSpacing: "3px",
+                textTransform: "uppercase",
+                color: "#666",
+                marginBottom: "24px",
+              }}
+            >
+              Submissions · {submissions.length} total
+            </p>
+            {adminLoading ? (
+              <p
+                style={{
+                  fontSize: "13px",
+                  color: "#444",
+                  letterSpacing: "1px",
+                }}
+              >
+                Loading submissions...
+              </p>
+            ) : submissions.length === 0 ? (
+              <p style={{ fontSize: "13px", color: "#333" }}>
+                No submissions yet.
+              </p>
+            ) : (
+              (() => {
+                const grouped = {};
+                submissions.forEach((s) => {
+                  const date = s.time ? s.time.split(",")[0] : "Unknown";
+                  if (!grouped[date]) grouped[date] = [];
+                  grouped[date].push(s);
+                });
+                const sortedDates = Object.keys(grouped).sort((a, b) => {
+                  const parseDate = (d) => {
+                    const parts = d.split("/");
+                    return new Date(parts[2], parts[1] - 1, parts[0]);
+                  };
+                  return parseDate(b) - parseDate(a);
+                });
+                return sortedDates.map((date) => {
+                  const daySubmissions = [...grouped[date]].sort(
+                    (a, b) => b.pct - a.pct,
+                  );
+                  return (
+                    <div key={date} style={{ marginBottom: "32px" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "12px",
+                          marginBottom: "16px",
+                        }}
+                      >
+                        <p
+                          style={{
+                            fontSize: "11px",
+                            letterSpacing: "2px",
+                            textTransform: "uppercase",
+                            color: "#E87B4A",
+                          }}
+                        >
+                          {date}
+                        </p>
+                        <div
+                          style={{
+                            flex: 1,
+                            height: "1px",
+                            background: "#1a1a1a",
+                          }}
+                        />
+                        <p style={{ fontSize: "11px", color: "#f0ede6" }}>
+                          {daySubmissions.length}{" "}
+                          {date === new Date().toLocaleDateString("en-IN")
+                            ? "today"
+                            : "submissions"}
+                        </p>
+                      </div>
+                      {daySubmissions.map((s, i) => {
+                        const t = getTier(s.score);
+                        const expanded = expandedRows[s.id] || false;
+                        return (
+                          <div
+                            key={i}
+                            style={{
+                              borderBottom: isMobile
+                                ? "1px solid #2a2a2a"
+                                : "1px solid #111",
+                              opacity: s.contacted ? 0.35 : 1,
+                              transition: "opacity 0.2s",
+                              marginBottom: isMobile ? "8px" : "0",
+                              paddingBottom: isMobile ? "8px" : "0",
+                            }}
+                          >
+                            <div
+                              style={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: isMobile ? "flex-start" : "center",
+                                flexDirection: isMobile ? "column" : "row",
+                                padding: "13px 0",
+                                gap: "12px",
+                              }}
+                            >
+                              {" "}
+                              <div style={{ flex: 1 }}>
+                                <span
+                                  style={{
+                                    color: "#c8c4bc",
+                                    fontSize: "18px",
+                                    fontWeight: 500,
+                                    display: "block",
+                                    marginBottom: "6px",
+                                  }}
+                                >
+                                  {s.name}
+                                </span>
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "6px",
+                                  }}
+                                >
+                                  <span
+                                    style={{ color: "#666", fontSize: "12px" }}
+                                  >
+                                    {s.email}
+                                  </span>
+                                  <button
+                                    onClick={() => {
+                                      navigator.clipboard.writeText(s.email);
+                                      setCopiedId(s.id);
+                                      setTimeout(() => setCopiedId(null), 1500);
+                                    }}
+                                    style={{
+                                      background: "transparent",
+                                      border: "none",
+                                      color:
+                                        copiedId === s.id ? "#4caf50" : "#666",
+                                      fontSize: "10px",
+                                      cursor: "pointer",
+                                      marginLeft: "8px",
+                                      padding: "2px 6px",
+                                      borderRadius: "4px",
+                                      transition: "color 0.15s",
+                                    }}
+                                  >
+                                    {copiedId === s.id ? (
+                                      <svg
+                                        width="14"
+                                        height="14"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="2"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                      >
+                                        <polyline points="20 6 9 17 4 12" />
+                                      </svg>
+                                    ) : (
+                                      <svg
+                                        width="14"
+                                        height="14"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="2"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                      >
+                                        <rect
+                                          x="9"
+                                          y="9"
+                                          width="13"
+                                          height="13"
+                                          rx="2"
+                                        />
+                                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                                      </svg>
+                                    )}
+                                  </button>
+                                </div>
+                              </div>
+                              <div
+                                style={{
+                                  textAlign: isMobile ? "left" : "right",
+                                  marginLeft: isMobile ? "0" : "16px",
+                                  display: "flex",
+                                  flexDirection: "column",
+                                  alignItems: isMobile
+                                    ? "flex-start"
+                                    : "flex-end",
+                                  gap: "6px",
+                                  minWidth: isMobile ? "100%" : "120px",
+                                  borderTop: isMobile
+                                    ? "1px solid #111"
+                                    : "none",
+                                  paddingTop: isMobile ? "10px" : "0",
+                                }}
+                              >
+                                <div>
+                                  <span
+                                    style={{
+                                      color: t.color,
+                                      fontFamily: "'Cormorant Garamond', serif",
+                                      fontSize: "26px",
+                                      fontWeight: 300,
+                                    }}
+                                  >
+                                    {s.pct}
+                                  </span>
+                                  <span
+                                    style={{ color: "#333", fontSize: "11px" }}
+                                  >
+                                    /100
+                                  </span>
+                                </div>
+                                <p
+                                  style={{
+                                    fontSize: "10px",
+                                    color: t.color,
+                                    letterSpacing: "1px",
+                                  }}
+                                >
+                                  {t.label}
+                                </p>
+                                <p style={{ fontSize: "10px", color: "#555" }}>
+                                  {s.time ? s.time.split(",")[1] : ""}
+                                </p>
+                                <div style={{ display: "flex", gap: "6px" }}>
+                                  <button
+                                    onClick={() => toggleExpanded(s.id)}
+                                    style={{
+                                      background: expanded
+                                        ? "#1a1a2e"
+                                        : "transparent",
+                                      border: expanded
+                                        ? "1px solid #E87B4A"
+                                        : "1px solid #333",
+                                      borderRadius: "100px",
+                                      padding: "4px 12px",
+                                      fontSize: "10px",
+                                      color: expanded ? "#E87B4A" : "#888",
+                                      cursor: "pointer",
+                                      letterSpacing: "1px",
+                                      textTransform: "uppercase",
+                                      transition: "all 0.2s",
+                                    }}
+                                  >
+                                    {expanded ? "Hide answers" : "View answers"}
+                                  </button>
+                                  <button
+                                    onClick={() =>
+                                      updateContacted(s.id, s.contacted)
+                                    }
+                                    style={{
+                                      background: s.contacted
+                                        ? "#1a3a1a"
+                                        : "transparent",
+                                      border: s.contacted
+                                        ? "1px solid #2d6a2d"
+                                        : "1px solid #333",
+                                      borderRadius: "100px",
+                                      padding: "4px 12px",
+                                      fontSize: "10px",
+                                      color: s.contacted ? "#4caf50" : "#888",
+                                      cursor: "pointer",
+                                      letterSpacing: "1px",
+                                      textTransform: "uppercase",
+                                      transition: "all 0.2s",
+                                    }}
+                                  >
+                                    {s.contacted
+                                      ? "Contacted"
+                                      : "Mark contacted"}
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      if (
+                                        window.confirm(
+                                          "Delete this submission permanently?",
+                                        )
+                                      ) {
+                                        deleteSubmission(s.id);
+                                      }
+                                    }}
+                                    style={{
+                                      background: "transparent",
+                                      border: "1px solid #333",
+                                      borderRadius: "100px",
+                                      padding: "4px 12px",
+                                      fontSize: "10px",
+                                      color: "#555",
+                                      cursor: "pointer",
+                                      letterSpacing: "1px",
+                                      textTransform: "uppercase",
+                                      transition: "all 0.2s",
+                                    }}
+                                    onMouseEnter={(e) =>
+                                      (e.currentTarget.style.color = "#ff4444")
+                                    }
+                                    onMouseLeave={(e) =>
+                                      (e.currentTarget.style.color = "#555")
+                                    }
+                                  >
+                                    Delete
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                            {expanded && (
+                              <div
+                                style={{
+                                  paddingBottom: "12px",
+                                  display: "flex",
+                                  flexWrap: "wrap",
+                                  gap: "6px",
+                                }}
+                              >
+                                {Object.entries(s.answers).map(([key, val]) => (
+                                  <span
+                                    key={key}
+                                    style={{
+                                      fontSize: "10px",
+                                      color: "#888",
+                                      background: "#111",
+                                      border: "1px solid #1a1a1a",
+                                      borderRadius: "4px",
+                                      padding: "4px 10px",
+                                    }}
+                                  >
+                                    <span style={{ color: "#444" }}>
+                                      {key}:{" "}
+                                    </span>
+                                    {val}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                });
+              })()
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
