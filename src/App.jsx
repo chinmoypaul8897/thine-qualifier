@@ -586,12 +586,18 @@ export default function App() {
   ) : (
     (() => {
       const grouped = {};
-      submissions.forEach((s) => {
-        const date = s.time ? s.time.split(",")[0] : "Unknown";
-        if (!grouped[date]) grouped[date] = [];
-        grouped[date].push(s);
-      });
-      const sortedDates = Object.keys(grouped).sort((a, b) => new Date(b) - new Date(a));
+submissions.forEach((s) => {
+  const date = s.time ? s.time.split(",")[0] : "Unknown";
+  if (!grouped[date]) grouped[date] = [];
+  grouped[date].push(s);
+});
+const sortedDates = Object.keys(grouped).sort((a, b) => {
+  const parseDate = (d) => {
+    const parts = d.split("/");
+    return new Date(parts[2], parts[1] - 1, parts[0]);
+  };
+  return parseDate(b) - parseDate(a);
+});
       return sortedDates.map((date) => {
         const daySubmissions = [...grouped[date]].sort((a, b) => b.pct - a.pct);
         return (
