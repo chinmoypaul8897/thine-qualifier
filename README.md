@@ -253,4 +253,4 @@ Worth being direct about what a serverless-in-the-loosest-sense architecture cos
 
 **Chinmoy Paul** — Data Science & AI, IIT Guwahati
 
-[GitHub](https://github.com/chinmoypaul8897) · [Live demo](https://thine-qualifier.vercel.app)
+[LinkedIn](https://www.linkedin.com/in/chinmoy-paul/) · [GitHub](https://github.com/chinmoypaul8897) · [Live demo](https://thine-qualifier.vercel.app)
