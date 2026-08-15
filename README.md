@@ -119,7 +119,7 @@ The tradeoff this buys and what it costs is written up in [Tradeoffs](#tradeoffs
 
 > **Try it:** open the [live demo](https://thine-qualifier.vercel.app), scroll to the `ADMIN` box pinned at the bottom of any screen, and enter **`thine2026`**.
 
-Submissions come back grouped by date — newest day first — and ranked by score *within* each day. Getting that right took a couple of passes: Airtable stores the timestamp as a `DD/MM/YYYY, HH:MM` string, so sorting it lexicographically puts the 2nd of a month above the 15th. The fix parses each group key back into a real `Date` before comparing.
+Submissions come back grouped by date — newest day first — and ranked by score *within* each day. Getting that right took a couple of passes: Airtable stores the timestamp as a `DD/MM/YYYY, HH:MM` string, and comparing those as strings compares the *day* field first — so `31/08` sorts above `01/09`, pushing an older day to the top of the list every time a month rolls over. The fix parses each group key back into a real `Date` before comparing.
 
 <div align="center">
 <img src="docs/screenshots/04-admin.png" alt="Admin dashboard with submissions grouped by date and ranked by score" width="90%" />
