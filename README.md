@@ -13,6 +13,8 @@ Built for [Thine](https://thine.com) — a personal intelligence app — to deci
 
 **[→ Live demo](https://thine-qualifier.vercel.app)**
 
+<img src="docs/demo.gif" alt="Walkthrough of the qualifier — landing screen, seven scored questions, and the result card" width="90%" />
+
 </div>
 
 ---
@@ -240,6 +242,8 @@ Worth being direct about what a serverless-in-the-loosest-sense architecture cos
 **The admin gate is a hardcoded string.** `thine2026` is compared client-side in [`src/App.jsx`](src/App.jsx), which makes it a speed bump rather than authentication — it keeps a curious visitor out of the dashboard and nothing more. Real auth belongs behind that same serverless layer, session-based, with the submission list never reaching an unauthenticated client. It's published openly in this README precisely because it protects nothing; the demo is meant to be explorable.
 
 **One component, 1,200 lines.** Every screen, all styling, and all four Airtable calls live in a single `App.jsx` with inline style objects. Fine at this size and genuinely fast to iterate on, but the seams are obvious: the questions and weights want to be data, the Airtable calls want a small client module, and the admin panel is its own route.
+
+**The answer options aren't keyboard accessible.** Each of the seven options renders as a `<div>` with an `onClick` handler, and there isn't a single `role`, `tabIndex`, or `aria-*` attribute in the component. So the funnel can't be completed without a mouse, and a screen reader announces seven unlabelled generic containers instead of a question with four choices. Swapping the divs for `<button>` elements fixes both at once, and it's the first change I'd make.
 
 **No test suite.** Scoring and tiering are pure functions of the answer set — `getTier` and the accumulator are the two things most worth pinning down before the weights get tuned again.
 
